@@ -1848,13 +1848,7 @@ function openPayAlertConfig() {
   const card = dlg.querySelector('.dialog-card, .dialog-box');
   // En primer plano, a la altura del botón pulsado
   placeOverlayNearAnchor(dlg, card);
-  if (card) {
-    try { card.focus?.(); } catch (e) {}
-  }
-  setTimeout(function () {
-    const btn = document.getElementById('pa-cfg-save');
-    if (btn) try { btn.focus(); } catch (e) {}
-  }, 50);
+  document.getElementById('pa-cfg-mant')?.focus({preventScroll:true});
 }
 function closePayAlertConfig() {
   const dlg = document.getElementById('pay-alert-dialog');
@@ -1864,6 +1858,7 @@ function closePayAlertConfig() {
     dlg.setAttribute('aria-hidden', 'true');
   }
   document.body.style.overflow = '';
+  document.getElementById('pa-open-cfg')?.focus({preventScroll:true});
 }
 function savePayAlertConfigFromUI() {
   const cfg = {
@@ -1875,11 +1870,10 @@ function savePayAlertConfigFromUI() {
   };
   savePayAlertCfg(cfg);
   if (cfg.browser && typeof Notification !== 'undefined' && Notification.permission === 'default') {
-    Notification.requestPermission().catch(function () {});
+    try { Notification.requestPermission()?.catch(() => {}); } catch (e) {}
   }
-  closePayAlertConfig();
   renderPayAlerts();
-  notifyPaymentAlerts(true);
+  closePayAlertConfig();
 }
 function notifyPaymentAlerts(forceToast) {
   const s = getPaymentAlertSummary();
@@ -4069,6 +4063,7 @@ document.addEventListener('keydown', e => {
     if (adminDialog.open || emailDialog.open) return;
     const dlg = document.getElementById('confirm-dialog');
     if (!dlg.classList.contains('hidden')) document.getElementById('confirm-cancel').click();
+    else if (document.getElementById('pay-alert-dialog').getAttribute('aria-hidden') === 'false') closePayAlertConfig();
     else if (document.getElementById('ficha-overlay')?.classList.contains('open')) closeFicha();
     else if (document.getElementById('sheet-view')?.classList.contains('open')) closeSheet();
     else if (!document.getElementById('github-dialog')?.classList.contains('hidden')) closeGithubConfig();
@@ -4084,14 +4079,14 @@ if (localStorage.getItem('lt27_dark_v1794762948035')==='1') document.documentEle
 // Init
 initLockUI();
 render();
-if (typeof initPayAlertsUI === 'function') initPayAlertsUI();
+document.addEventListener('DOMContentLoaded', initPayAlertsUI, {once:true});
 setTimeout(() => notifyPaymentAlerts(false), 900);
 
 </script>
 
-<div id="pay-alert-dialog" class="dialog hidden" role="dialog" aria-modal="true">
+<div id="pay-alert-dialog" class="dialog hidden" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="pa-cfg-title">
     <div class="dialog-card" style="max-width:420px">
-      <h3>Alertas de pagos</h3>
+      <h3 id="pa-cfg-title">Alertas de pagos</h3>
       <p style="font-size:.85rem;color:var(--muted);margin:.35rem 0 .8rem">Elige qué avisos mostrar. No incluye músicos.</p>
       <label style="display:flex;gap:.5rem;align-items:center;margin:.4rem 0;font-size:.9rem">
         <input type="checkbox" id="pa-cfg-mant" checked=""> Pendientes de <strong>mantenimiento</strong>
