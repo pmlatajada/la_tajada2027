@@ -136,6 +136,8 @@ input:focus,select:focus,textarea:focus{
   user-select:none;transition:all var(--t);
 }
 .filter-chip:hover,.col-toggle:hover{transform:translateY(-1px);border-color:var(--purple-l)}
+.filter-chip-red{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;border-color:transparent}
+.filter-chip-red:hover{filter:brightness(1.08)}
 .filter-chip.active,.col-toggle.active{
   background:linear-gradient(135deg,var(--purple),#7c3aed);color:#fff;border-color:transparent;
   box-shadow:0 4px 14px rgba(109,40,217,.28);
@@ -196,7 +198,11 @@ html.dark .pay-alerts .pa-ok{color:#86efac}
 }
 
 #table-container{
-  overflow-x:auto;overflow-y:visible;
+  overflow-x:scroll;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:thin;
+  scrollbar-color:var(--purple-l) var(--border);
+overflow-y:visible;
   -webkit-overflow-scrolling:touch;
   border:1px solid var(--border);
   border-radius:var(--radius);
@@ -204,7 +210,18 @@ html.dark .pay-alerts .pa-ok{color:#86efac}
   box-shadow:var(--shadow);
   animation:popIn 0.4s var(--ease) .05s both;
 }
-#table-container::-webkit-scrollbar{height:10px}
+#table-container::-webkit-scrollbar{height:16px}
+#table-container::-webkit-scrollbar-track{background:var(--border);border-radius:8px}
+#table-container::-webkit-scrollbar-thumb{background:linear-gradient(90deg,var(--purple-l),var(--purple));border-radius:8px}
+#main-table th{position:relative}
+.main-resizer{position:absolute;top:0;right:0;width:16px;height:100%;cursor:col-resize;touch-action:none;background:transparent;border:0;padding:0;z-index:5}
+.main-resizer::after{content:"";position:absolute;top:22%;bottom:22%;right:4px;width:3px;border-radius:2px;background:rgba(255,255,255,.55)}
+.main-resizer:hover::after,.main-resizer:active::after{background:#fff}
+#hscroll-bar{position:fixed;left:1rem;right:1rem;bottom:.55rem;height:18px;z-index:400;display:none;background:var(--card);border:1px solid var(--border);border-radius:9px;padding:2px 3px;box-shadow:var(--shadow);cursor:pointer}
+#hscroll-bar.visible{display:block}
+#hscroll-thumb{position:absolute;top:2px;bottom:2px;min-width:40px;background:linear-gradient(90deg,var(--purple-l),var(--purple));border-radius:6px;cursor:grab}
+#hscroll-thumb:active{cursor:grabbing;background:var(--purple)}
+@media print{#hscroll-bar{display:none !important}}
 #table-container::-webkit-scrollbar-thumb{background:var(--purple-l);border-radius:6px}
 
 table{border-collapse:separate;border-spacing:0;width:max-content;min-width:100%}
@@ -268,7 +285,7 @@ html.dark .bulk-bar{background:#1e1b4b;border-color:#5b21b6}
   height:100vh !important;
   height:100dvh !important;
   max-height:100vh;
-  z-index:9999;
+  z-index:10060;
   background:rgba(15,23,42,.6);
   backdrop-filter:blur(6px);
   display:flex;align-items:center;justify-content:center;
@@ -288,7 +305,7 @@ html.dark .bulk-bar{background:#1e1b4b;border-color:#5b21b6}
   border:1px solid #e2e8f0;
   animation:popIn 0.3s var(--ease) both;
   pointer-events:auto !important;
-  position:relative;z-index:10000;
+  position:relative;z-index:10061;
   margin:auto;
   flex-shrink:0;
 }
@@ -391,10 +408,10 @@ body.lock-open #lock-overlay *{pointer-events:auto !important}
 
 /* Ficha */
 .ficha-overlay{
-  position:fixed;inset:0;z-index:95;
+  position:fixed;inset:0;z-index:10000;
   background:rgba(15,23,42,.5);
   backdrop-filter:blur(5px);
-  display:none;align-items:flex-start;justify-content:center;
+  display:none;align-items:center;justify-content:center;
   padding:1rem;overflow:auto;
   animation:fadeIn 0.2s ease both;
 }
@@ -402,7 +419,7 @@ body.lock-open #lock-overlay *{pointer-events:auto !important}
 .ficha-card{
   background:var(--card);color:var(--text);
   border-radius:16px;width:100%;max-width:640px;
-  margin:1rem auto 2rem;
+  margin:0 auto;
   box-shadow:var(--shadow-lg);
   border:1px solid var(--border);
   overflow:hidden;
@@ -544,7 +561,7 @@ html.dark .btn-lock.unlocked{background:#14532d;color:#bbf7d0;border-color:#1665
 .dialog{
   position:fixed;inset:0;background:rgba(15,23,42,.45);
   backdrop-filter:blur(4px);
-  display:flex;align-items:center;justify-content:center;z-index:10000;padding:1rem;
+  display:flex;align-items:center;justify-content:center;z-index:10050;padding:1rem;
   animation:fadeIn 0.2s ease both;
 }
 .dialog.hidden{display:none}
@@ -651,7 +668,7 @@ html.dark .btn-lock.unlocked{background:#14532d;color:#bbf7d0;border-color:#1665
       <button id="btn-add" class="btn btn-primary">+ Añadir</button>
       <button id="btn-download-page" type="button" class="btn btn-outline" title="Descargar copia idéntica de esta página">Descargar página</button>
       <button id="btn-save-now" type="button" class="btn btn-outline" title="Guardar ahora en este navegador y en la nube">💾 Guardar ahora</button>
-      <button id="btn-email-all" type="button" class="btn btn-outline" title="Abrir Hotmail/Outlook para escribir a todos">✉ Correo a todos</button>
+      <button id="btn-email-all" type="button" class="btn btn-outline" title="Abrir Outlook web (latajada1993@hotmail.com) para escribir a todos">✉ Correo a todos</button>
       <div class="export-wrap">
         <button id="btn-export" type="button" class="btn btn-yellow">Exportar ▾</button>
         <div id="export-menu" class="export-menu" role="menu">
@@ -682,13 +699,15 @@ html.dark .btn-lock.unlocked{background:#14532d;color:#bbf7d0;border-color:#1665
     <span class="filter-label">Seleccionar:</span>
     <button class="filter-chip" data-f="tipo:Adulto">Adultos</button>
     <button class="filter-chip" data-f="tipo:Niño">Niños</button>
+    <span class="filter-label" style="margin-left:.7rem">Asistencia:</span>
     <button class="filter-chip" data-f="sabado:1">Sábado</button>
+    <button class="filter-chip" data-f="cena:1">Cena</button>
     <button class="filter-chip" data-f="domingo:1">Domingo</button>
     <button class="filter-chip" data-f="lunes:1">Lunes</button>
-    <button class="filter-chip" data-f="cena:1">Cena</button>
-    <button class="filter-chip" data-f="pendienteMant:1" title="Sin pago de mantenimiento, excluye músicos">Pendientes pago mant.</button>
-    <button class="filter-chip" data-f="pendienteCuota:1" title="Sin pago de cuota, excluye músicos">Pendientes de cuota</button>
-    <button class="filter-chip" data-f="sinPagos:1" title="No han pagado cuota ni mantenimiento; excluye músicos">Sin pagos</button>
+    <span class="filter-label" style="margin-left:.7rem">Pagos:</span>
+    <button class="filter-chip" data-f="pagadoMant:1" title="Han pagado mantenimiento, excluye músicos">Pagado mant.</button>
+    <button class="filter-chip" data-f="pagadoCuota:1" title="Han pagado cuota, excluye músicos">Cuota pagada</button>
+    <button class="filter-chip filter-chip-red" data-f="sinPagos:1" title="No han pagado cuota ni mantenimiento; excluye músicos">Sin pagos</button>
     <label class="filter-label" style="margin-left:.35rem">Grupo:</label>
     <select id="filter-grupo" class="filter-grupo-select" title="Filtrar por grupo">
       <option value="">Todos</option>
@@ -729,6 +748,7 @@ html.dark .btn-lock.unlocked{background:#14532d;color:#bbf7d0;border-color:#1665
       <tbody id="tbody"></tbody>
     </table>
   </div>
+  <div id="hscroll-bar" aria-hidden="true"><div id="hscroll-thumb"></div></div>
 </div>
 
 
@@ -791,13 +811,13 @@ html.dark .btn-lock.unlocked{background:#14532d;color:#bbf7d0;border-color:#1665
 <div id="lock-overlay" class="lock-overlay" aria-hidden="false">
   <div class="lock-box" role="dialog" aria-modal="true" aria-labelledby="lock-title">
     <h3 id="lock-title">Peña Mixta La Tajada 2027</h3>
-    <p id="lock-desc">Introduce la <strong>contraseña de acceso</strong> para entrar.</p>
+    <p id="lock-desc">Introduce la contraseña para entrar.</p>
     <div class="lock-hint" id="lock-hint"></div>
-    <form id="lock-form" autocomplete="on">
+    <form id="lock-form" autocomplete="on" onsubmit="return tryUnlock(event)">
       <input type="password" id="lock-pass" name="password" placeholder="Contraseña" autocomplete="current-password">
       <div class="lock-error" id="lock-error"></div>
       <div class="lock-actions">
-        <button type="submit" class="btn btn-primary" id="lock-unlock">Desbloquear</button>
+        <button type="submit" class="btn btn-primary" id="lock-unlock" onclick="return tryUnlock(event)">Entrar</button>
       </div>
     </form>
   </div>
@@ -847,7 +867,7 @@ let fichaRowId = null;
 let fichaIsNew = false;
 
 function blankFichaRow() {
-  const maxNum = Math.max(0, ...data.map(d => d.num || 0));
+  const maxNum = Math.max(197, ...data.map(d => d.num || 0));
   const maxFam = Math.max(0, ...data.map(d => d.familia || 0));
   return {
     id: Date.now(),
@@ -1172,10 +1192,7 @@ function showLockOverlay(actionLabel) {
 }
 
 function requireEdit(actionLabel) {
-  if (!entryVerified) {
-    showLockOverlay('acceder');
-    return false;
-  }
+  if (!entryVerified) { showLockOverlay('acceder'); return false; }
   if (canEdit) return true;
   showLockOverlay(actionLabel || 'modificar');
   return false;
@@ -1205,7 +1222,7 @@ function tryUnlock(e) {
   const entryExpected = String(ENTRY_PASSWORD).trim().toLowerCase();
   const editExpected = String(EDIT_PASSWORD).trim().toLowerCase();
   if (!entryVerified) {
-    if (val && val === entryExpected) {
+    if (val === entryExpected || val === editExpected) {
       if (errEl) errEl.textContent = '';
       entryVerified = true;
       lockDialogOpen = false;
@@ -1220,10 +1237,11 @@ function tryUnlock(e) {
         cloudDirty = true;
         setCloudStatus('pending', '☁ Auto-sync: subiendo…');
       }
-      return;
+      return false;
     }
-    if (errEl) errEl.textContent = 'Contraseña de acceso incorrecta.';
-    return;
+    if (errEl) errEl.textContent = 'Contraseña incorrecta.';
+    if (inp) { try { inp.focus(); inp.select(); } catch (e) {} }
+    return false;
   }
   const expected = editExpected;
   if (val && val === expected) {
@@ -1274,7 +1292,6 @@ function toggleLockButton(e) {
 function initLockUI() {
   try { sessionStorage.removeItem('lt27_unlocked'); } catch (e) {}
   canEdit = false;
-  entryVerified = false;
   lockDialogOpen = true;
   document.body.classList.add('lock-open');
   document.body.classList.remove('readonly');
@@ -1796,6 +1813,14 @@ function isSinPagos(d) {
   if (isMusico(d)) return false;
   return !d.fechaPagoCuota && !d.fechaPagoMant;
 }
+function isPagadoMant(d) {
+  if (isMusico(d)) return false;
+  return !!d.fechaPagoMant;
+}
+function isPagadoCuota(d) {
+  if (isMusico(d)) return false;
+  return !!d.fechaPagoCuota;
+}
 function isPendienteCena(d) {
   if (isMusico(d)) return false;
   const imp = Number(d.importeCena) || 0;
@@ -1964,6 +1989,8 @@ function getFiltered() {
     else if (k==='cena') list = list.filter(d => fmtBool(d.cenaSabado));
     else if (k==='pendienteMant') list = list.filter(isPendienteMant);
     else if (k==='pendienteCuota') list = list.filter(isPendienteCuota);
+    else if (k==='pagadoMant') list = list.filter(isPagadoMant);
+    else if (k==='pagadoCuota') list = list.filter(isPagadoCuota);
     else if (k==='sinPagos') list = list.filter(isSinPagos);
   }
   // sort
@@ -1989,6 +2016,95 @@ function highlight(text, q) {
 }
 
 // ===== RENDER =====
+let colWidths = {};
+try { colWidths = JSON.parse(localStorage.getItem('lt27_col_widths') || '{}') || {}; } catch (e) { colWidths = {}; }
+function saveColWidths() {
+  try { localStorage.setItem('lt27_col_widths', JSON.stringify(colWidths)); } catch (e) {}
+}
+function initMainResizers() {
+  document.querySelectorAll('#main-table th .main-resizer').forEach(function (btn) {
+    btn.addEventListener('pointerdown', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      const th = btn.closest('th');
+      const key = btn.dataset.resize;
+      if (!th || !key) return;
+      const startX = e.clientX;
+      const startW = th.offsetWidth;
+      function move(ev) {
+        const w = Math.max(40, Math.round(startW + (ev.clientX - startX)));
+        th.style.width = w + 'px';
+        colWidths[key] = w;
+      }
+      function up() {
+        document.removeEventListener('pointermove', move);
+        document.removeEventListener('pointerup', up);
+        document.removeEventListener('pointercancel', up);
+        saveColWidths();
+        updateHScroll();
+      }
+      document.addEventListener('pointermove', move);
+      document.addEventListener('pointerup', up);
+      document.addEventListener('pointercancel', up);
+    });
+  });
+}
+function updateHScroll() {
+  const c = document.getElementById('table-container');
+  const bar = document.getElementById('hscroll-bar');
+  const thumb = document.getElementById('hscroll-thumb');
+  if (!c || !bar || !thumb) return;
+  const overflow = c.scrollWidth - c.clientWidth;
+  if (overflow <= 4) { bar.classList.remove('visible'); return; }
+  bar.classList.add('visible');
+  const ratio = c.clientWidth / c.scrollWidth;
+  const w = Math.max(40, Math.round(ratio * (bar.clientWidth - 6)));
+  thumb.style.width = w + 'px';
+  const maxLeft = bar.clientWidth - 6 - w;
+  const left = Math.round((c.scrollLeft / overflow) * maxLeft);
+  thumb.style.left = (3 + left) + 'px';
+}
+function initHScroll() {
+  const c = document.getElementById('table-container');
+  const bar = document.getElementById('hscroll-bar');
+  const thumb = document.getElementById('hscroll-thumb');
+  if (!c || !bar || !thumb) return;
+  c.addEventListener('scroll', updateHScroll);
+  window.addEventListener('resize', updateHScroll);
+  if (window.ResizeObserver) {
+    new ResizeObserver(updateHScroll).observe(c);
+  }
+  if (window.MutationObserver) {
+    new MutationObserver(updateHScroll).observe(document.getElementById('tbody'), { childList: true, subtree: true });
+  }
+  let dragging = false, startX = 0, startLeft = 0;
+  thumb.addEventListener('pointerdown', function (e) {
+    e.preventDefault();
+    dragging = true;
+    startX = e.clientX;
+    startLeft = parseFloat(thumb.style.left || '3') || 3;
+    thumb.setPointerCapture && thumb.setPointerCapture(e.pointerId);
+  });
+  document.addEventListener('pointermove', function (e) {
+    if (!dragging) return;
+    const maxLeft = bar.clientWidth - 6 - thumb.offsetWidth;
+    let left = startLeft + (e.clientX - startX);
+    left = Math.max(3, Math.min(maxLeft, left));
+    thumb.style.left = left + 'px';
+    const overflow = c.scrollWidth - c.clientWidth;
+    if (overflow > 0) c.scrollLeft = ((left - 3) / maxLeft) * overflow;
+  });
+  document.addEventListener('pointerup', function () { dragging = false; });
+  bar.addEventListener('pointerdown', function (e) {
+    if (e.target === thumb) return;
+    const rect = bar.getBoundingClientRect();
+    const overflow = c.scrollWidth - c.clientWidth;
+    if (overflow <= 0) return;
+    const ratio = (e.clientX - rect.left - 3 - thumb.offsetWidth / 2) / (rect.width - 6 - thumb.offsetWidth);
+    c.scrollLeft = Math.max(0, Math.min(overflow, ratio * overflow));
+    updateHScroll();
+  });
+}
 function renderColToggles() {
   const cont = document.getElementById('col-toggles');
   const byKey = Object.fromEntries(COLUMNS.map(c => [c.key, c]));
@@ -2007,8 +2123,12 @@ function renderHeader() {
     if (c.key==='_ficha') return `<th style="min-width:36px" title="Ficha"></th>`;
     const sorted = sortKey===c.key ? 'sorted' : '';
     const icon = sortKey===c.key ? (sortDir==='asc'?'▲':'▼') : '⇅';
-    return `<th class="${sorted}" draggable="true" data-key="${c.key}" style="min-width:${c.width}px" title="Clic: ordenar · Arrastrar: mover columna">${c.label}<span class="sort-icon">${icon}</span></th>`;
+    const w = colWidths[c.key] ? `width:${colWidths[c.key]}px;` : '';
+    return `<th class="${sorted}" draggable="true" data-key="${c.key}" style="min-width:${c.width}px;${w}" title="Clic: ordenar · Arrastrar: mover columna · Borde derecho: ancho">${c.label}<span class="sort-icon">${icon}</span><button type="button" class="main-resizer" data-resize="${c.key}" title="Arrastra para cambiar el ancho"></button></th>`;
   }).join('');
+
+  initMainResizers();
+  updateHScroll();
 
   document.getElementById('sel-all')?.addEventListener('change', e => {
     const filtered = getFiltered();
@@ -2237,6 +2357,7 @@ function render() {
   refreshGrupoFilterOptions();
   if (typeof renderPayAlerts === 'function') renderPayAlerts();
   document.getElementById('btn-group').textContent = groupByFamily ? 'Desagrupar grupos' : 'Agrupar por grupo';
+  updateHScroll();
 }
 
 // ===== EDIT =====
@@ -2411,6 +2532,8 @@ function rowsMatchingChip(f) {
   if (f === 'cena:1') return data.filter(d => fmtBool(d.cenaSabado));
   if (f === 'pendienteMant:1') return data.filter(isPendienteMant);
   if (f === 'pendienteCuota:1') return data.filter(isPendienteCuota);
+  if (f === 'pagadoMant:1') return data.filter(isPagadoMant);
+  if (f === 'pagadoCuota:1') return data.filter(isPagadoCuota);
   if (f === 'sinPagos:1') return data.filter(isSinPagos);
   if (f.startsWith('grupo:')) {
     const g = f.slice(6);
@@ -2440,6 +2563,8 @@ const CHIP_TITLES = {
   'cena:1': 'Cena',
   'pendienteMant:1': 'Pendientes pago mant. (sin músicos)',
   'pendienteCuota:1': 'Pendientes de cuota (sin músicos)',
+  'pagadoMant:1': 'Han pagado mantenimiento (sin músicos)',
+  'pagadoCuota:1': 'Han pagado cuota (sin músicos)',
   'sinPagos:1': 'Sin pagos (cuota ni mant., sin músicos)'
 };
 
@@ -3481,63 +3606,79 @@ function emailAll() {
   const onlySelected = selected && selected.size > 0;
   const emails = collectEmails(onlySelected);
   if (!emails.length) {
-    alert(onlySelected
-      ? 'Los seleccionados no tienen email válido.'
-      : 'No hay emails válidos en el listado.');
+    alert(onlySelected ? 'Los seleccionados no tienen email válido.' : 'No hay emails válidos en el listado.');
     return;
   }
-
   const subject = encodeURIComponent('Peña Mixta La Tajada 2027');
-  const body = encodeURIComponent('Hola,\\n\\n');
-  // Outlook/Hotmail aceptan BCC; partimos si la URL es muy larga
-  const maxLen = 1800; // margen seguro para mailto
+  const body = encodeURIComponent('Hola,\n\n');
+  const maxLen = 1500;
   const batches = [];
-  let batch = [];
-  let len = 0;
-  emails.forEach(e => {
+  let batch = [], len = 0;
+  emails.forEach(function(e){
     const add = (batch.length ? 1 : 0) + e.length;
-    if (batch.length && len + add > maxLen) {
-      batches.push(batch);
-      batch = [e];
-      len = e.length;
-    } else {
-      batch.push(e);
-      len += add;
-    }
+    if (batch.length && len + add > maxLen) { batches.push(batch); batch=[e]; len=e.length; }
+    else { batch.push(e); len += add; }
   });
   if (batch.length) batches.push(batch);
-
-  const msg = (onlySelected ? 'Seleccionados' : 'Todos') +
-    ': ' + emails.length + ' emails.\\n' +
-    (batches.length > 1
-      ? ('Se abrirán ' + batches.length + ' ventanas de correo (límite del enlace).\\n')
-      : '') +
-    'Se abrirá tu cliente de correo (Hotmail/Outlook si está configurado) con los destinatarios en CCO.';
-
-  if (!confirm(msg + '\\n\\n¿Continuar?')) return;
-
-  batches.forEach((b, i) => {
-    const bcc = encodeURIComponent(b.join(','));
-    const url = 'mailto:?bcc=' + bcc + '&subject=' + subject + '&body=' + body;
-    setTimeout(() => { window.location.href = url; }, i * 600);
+  const msg=(onlySelected?'Seleccionados':'Todos')+': '+emails.length+' emails.\n'+
+    (batches.length>1?('Se abrirán '+batches.length+' ventanas de Outlook web.\n'):'')+
+    'Se abrirá Outlook web (Hotmail) para escribir desde tu cuenta latajada1993@hotmail.com.\n'+
+    'Los destinatarios irán en CCO (columna Correo).\n'+
+    'También se copiará la lista al portapapeles.';
+  if (!confirm(msg+'\n\n¿Continuar?')) return;
+  try { if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(emails.join('; ')); } catch(e){}
+  batches.forEach(function(b,i){
+    const bcc=encodeURIComponent(b.join(','));
+    const url='https://outlook.live.com/mail/0/deeplink/compose?bcc='+bcc+'&subject='+subject+'&body='+body;
+    setTimeout(function(){ window.open(url,'_blank','noopener'); }, i*700);
   });
+}
 
-  // También copiar lista al portapapeles por si falla el mailto
+
+const GH_OWNER = 'pmlatajada';
+const GH_REPO = 'la_tajada2027';
+const GH_PATH = 'index.html';
+const GH_BRANCH = 'main';
+
+async function githubSavePage() {
   try {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(emails.join('; '));
+    let token = '';
+    try { token = localStorage.getItem('lt27_gh_token') || ''; } catch (e) {}
+    if (!token) {
+      token = prompt('Para actualizar la web en GitHub, pega tu token de GitHub (permiso "Contents: Read and write"). Se guardará solo en este navegador.');
+      if (!token) return;
+      try { localStorage.setItem('lt27_gh_token', token); } catch (e) {}
     }
-  } catch (e) {}
+    const api = 'https://api.github.com';
+    const headers = { 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json' };
+    const url = api + '/repos/' + GH_OWNER + '/' + GH_REPO + '/contents/' + GH_PATH + '?ref=' + GH_BRANCH;
+    const res = await fetch(url, { headers: headers });
+    if (!res.ok) throw new Error('No se pudo leer index.html en GitHub (' + res.status + '). Revisa el token.');
+    const meta = await res.json();
+    const html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+    const content = btoa(unescape(encodeURIComponent(html)));
+    const put = await fetch(url, {
+      method: 'PUT',
+      headers: Object.assign({}, headers, { 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ message: 'Actualizar web desde la página', content: content, branch: GH_BRANCH, sha: meta.sha })
+    });
+    if (!put.ok) {
+      const t = await put.text();
+      throw new Error('GitHub respondió ' + put.status + ': ' + t);
+    }
+    alert('Web actualizada en GitHub.\n\nGitHub Pages la publicará en unos segundos o minutos.');
+  } catch (err) {
+    alert('No se pudo actualizar GitHub: ' + (err && err.message ? err.message : err));
+  }
 }
 
 document.getElementById('btn-save-now')?.addEventListener('click', function (e) {
   e.preventDefault();
-  if (!requireEdit('guardar')) return;
-  saveNow();
+  const r = saveNow();
+  if (r && typeof r.then === 'function') r.then(function(){ return githubSavePage(); });
 });
 document.getElementById('btn-email-all')?.addEventListener('click', function (e) {
   e.preventDefault();
-  if (!requireEdit('enviar correo a todos')) return;
   emailAll();
 });
 
@@ -3698,7 +3839,9 @@ document.addEventListener('keydown', e => {
 if (localStorage.getItem('lt27_dark_v3')==='1') document.documentElement.classList.add('dark');
 
 // Init
-initLockUI();
+initLockUI();;
+  initHScroll();
+  updateHScroll();
 (async function bootstrap() {
   setCloudStatus('pending', '☁ Conectando…');
   // Base: datos embebidos en el HTML (siempre completos en una copia descargada)
