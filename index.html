@@ -217,11 +217,14 @@ overflow-y:visible;
 .main-resizer{position:absolute;top:0;right:0;width:16px;height:100%;cursor:col-resize;touch-action:none;background:transparent;border:0;padding:0;z-index:5}
 .main-resizer::after{content:"";position:absolute;top:22%;bottom:22%;right:4px;width:3px;border-radius:2px;background:rgba(255,255,255,.55)}
 .main-resizer:hover::after,.main-resizer:active::after{background:#fff}
+#hscroll-top{width:100%;height:20px;margin-bottom:.35rem;display:block;background:var(--card);border:1px solid var(--border);border-radius:9px;padding:2px 3px;box-shadow:var(--shadow);cursor:pointer;position:relative;z-index:60}
+#hscroll-thumb-top{position:absolute;top:2px;bottom:2px;min-width:40px;background:linear-gradient(90deg,var(--purple-l),var(--purple));border-radius:6px;cursor:grab}
+#hscroll-thumb-top:active{cursor:grabbing;background:var(--purple)}
 #hscroll-bar{position:fixed;left:1rem;right:1rem;bottom:.55rem;height:18px;z-index:400;display:none;background:var(--card);border:1px solid var(--border);border-radius:9px;padding:2px 3px;box-shadow:var(--shadow);cursor:pointer}
 #hscroll-bar.visible{display:block}
 #hscroll-thumb{position:absolute;top:2px;bottom:2px;min-width:40px;background:linear-gradient(90deg,var(--purple-l),var(--purple));border-radius:6px;cursor:grab}
 #hscroll-thumb:active{cursor:grabbing;background:var(--purple)}
-@media print{#hscroll-bar{display:none !important}}
+@media print{#hscroll-top,#hscroll-bar{display:none !important}}
 #table-container::-webkit-scrollbar-thumb{background:var(--purple-l);border-radius:6px}
 
 table{border-collapse:separate;border-spacing:0;width:max-content;min-width:100%}
@@ -285,7 +288,7 @@ html.dark .bulk-bar{background:#1e1b4b;border-color:#5b21b6}
   height:100vh !important;
   height:100dvh !important;
   max-height:100vh;
-  z-index:10060;
+  z-index:9999;
   background:rgba(15,23,42,.6);
   backdrop-filter:blur(6px);
   display:flex;align-items:center;justify-content:center;
@@ -305,7 +308,7 @@ html.dark .bulk-bar{background:#1e1b4b;border-color:#5b21b6}
   border:1px solid #e2e8f0;
   animation:popIn 0.3s var(--ease) both;
   pointer-events:auto !important;
-  position:relative;z-index:10061;
+  position:relative;z-index:10000;
   margin:auto;
   flex-shrink:0;
 }
@@ -408,10 +411,10 @@ body.lock-open #lock-overlay *{pointer-events:auto !important}
 
 /* Ficha */
 .ficha-overlay{
-  position:fixed;inset:0;z-index:10000;
+  position:fixed;inset:0;z-index:95;
   background:rgba(15,23,42,.5);
   backdrop-filter:blur(5px);
-  display:none;align-items:center;justify-content:center;
+  display:none;align-items:flex-start;justify-content:center;
   padding:1rem;overflow:auto;
   animation:fadeIn 0.2s ease both;
 }
@@ -419,7 +422,7 @@ body.lock-open #lock-overlay *{pointer-events:auto !important}
 .ficha-card{
   background:var(--card);color:var(--text);
   border-radius:16px;width:100%;max-width:640px;
-  margin:0 auto;
+  margin:1rem auto 2rem;
   box-shadow:var(--shadow-lg);
   border:1px solid var(--border);
   overflow:hidden;
@@ -561,7 +564,7 @@ html.dark .btn-lock.unlocked{background:#14532d;color:#bbf7d0;border-color:#1665
 .dialog{
   position:fixed;inset:0;background:rgba(15,23,42,.45);
   backdrop-filter:blur(4px);
-  display:flex;align-items:center;justify-content:center;z-index:10050;padding:1rem;
+  display:flex;align-items:center;justify-content:center;z-index:10000;padding:1rem;
   animation:fadeIn 0.2s ease both;
 }
 .dialog.hidden{display:none}
@@ -742,6 +745,7 @@ html.dark .btn-lock.unlocked{background:#14532d;color:#bbf7d0;border-color:#1665
 
   <div class="status-bar no-print" id="status">Cargando… <span id="lock-status" class="locked">🔒 Solo lectura</span> <span id="cloud-status">☁ —</span> <span id="drive-status" class="off" title="Google Drive">📁 Drive</span></div>
 
+  <div id="hscroll-top" aria-hidden="true"><div id="hscroll-thumb-top"></div></div>
   <div id="table-container">
     <table id="main-table">
       <thead><tr id="thead-row"></tr></thead>
@@ -867,7 +871,8 @@ let fichaRowId = null;
 let fichaIsNew = false;
 
 function blankFichaRow() {
-  const maxNum = Math.max(197, ...data.map(d => d.num || 0));
+  const noMusicos = data.filter(d => !isMusico(d));
+  const maxNum = noMusicos.length ? Math.max(...noMusicos.map(d => d.num || 0)) : 197;
   const maxFam = Math.max(0, ...data.map(d => d.familia || 0));
   return {
     id: Date.now(),
@@ -1785,9 +1790,10 @@ function saveData() {
   scheduleCloudSave();
 }
 function updateStatus() {
-  const f = getFiltered();
+  const f = getFiltered().filter(d => !isMusico(d));
+  const total = data.filter(d => !isMusico(d)).length;
   document.getElementById('status').innerHTML =
-    `Mostrando <strong>${f.length}</strong> de <strong>${data.length}</strong> socios` +
+    `Mostrando <strong>${f.length}</strong> de <strong>${total}</strong> socios` +
     (sessionEdits ? ` · <span style="color:var(--purple)">${sessionEdits} cambios en esta sesión</span>` : '') +
     ` · Guardado local ${new Date().toLocaleTimeString()}`;
 }
@@ -2051,59 +2057,69 @@ function initMainResizers() {
 }
 function updateHScroll() {
   const c = document.getElementById('table-container');
+  const top = document.getElementById('hscroll-top');
+  const topThumb = document.getElementById('hscroll-thumb-top');
   const bar = document.getElementById('hscroll-bar');
   const thumb = document.getElementById('hscroll-thumb');
-  if (!c || !bar || !thumb) return;
+  if (!c || !top || !topThumb || !bar || !thumb) return;
   const overflow = c.scrollWidth - c.clientWidth;
-  if (overflow <= 4) { bar.classList.remove('visible'); return; }
-  bar.classList.add('visible');
-  const ratio = c.clientWidth / c.scrollWidth;
-  const w = Math.max(40, Math.round(ratio * (bar.clientWidth - 6)));
+  const ratio = overflow > 4 ? (c.clientWidth / c.scrollWidth) : 1;
+  const w = Math.max(40, Math.round(ratio * (top.clientWidth - 6)));
+  topThumb.style.width = w + 'px';
   thumb.style.width = w + 'px';
-  const maxLeft = bar.clientWidth - 6 - w;
-  const left = Math.round((c.scrollLeft / overflow) * maxLeft);
+  const maxLeft = top.clientWidth - 6 - w;
+  const left = overflow > 4 ? Math.round((c.scrollLeft / overflow) * maxLeft) : 3;
+  topThumb.style.left = (3 + left) + 'px';
   thumb.style.left = (3 + left) + 'px';
+}
+function syncHScrollFromThumb(thumbEl, c, barEl) {
+  const maxLeft = barEl.clientWidth - 6 - thumbEl.offsetWidth;
+  const left = parseFloat(thumbEl.style.left || '3') || 3;
+  const overflow = c.scrollWidth - c.clientWidth;
+  if (overflow > 0) c.scrollLeft = ((left - 3) / maxLeft) * overflow;
 }
 function initHScroll() {
   const c = document.getElementById('table-container');
+  const top = document.getElementById('hscroll-top');
+  const topThumb = document.getElementById('hscroll-thumb-top');
   const bar = document.getElementById('hscroll-bar');
   const thumb = document.getElementById('hscroll-thumb');
-  if (!c || !bar || !thumb) return;
+  if (!c || !top || !topThumb || !bar || !thumb) return;
   c.addEventListener('scroll', updateHScroll);
   window.addEventListener('resize', updateHScroll);
-  if (window.ResizeObserver) {
-    new ResizeObserver(updateHScroll).observe(c);
+  if (window.ResizeObserver) new ResizeObserver(updateHScroll).observe(c);
+  if (window.MutationObserver) new MutationObserver(updateHScroll).observe(document.getElementById('tbody'), { childList: true, subtree: true });
+  function bindDrag(thumbEl, barEl) {
+    let dragging = false, startX = 0, startLeft = 0;
+    thumbEl.addEventListener('pointerdown', function (e) {
+      e.preventDefault();
+      dragging = true;
+      startX = e.clientX;
+      startLeft = parseFloat(thumbEl.style.left || '3') || 3;
+      thumbEl.setPointerCapture && thumbEl.setPointerCapture(e.pointerId);
+    });
+    document.addEventListener('pointermove', function (e) {
+      if (!dragging) return;
+      const maxLeft = barEl.clientWidth - 6 - thumbEl.offsetWidth;
+      let left = startLeft + (e.clientX - startX);
+      left = Math.max(3, Math.min(maxLeft, left));
+      thumbEl.style.left = left + 'px';
+      syncHScrollFromThumb(thumbEl, c, barEl);
+      updateHScroll();
+    });
+    document.addEventListener('pointerup', function () { dragging = false; });
+    barEl.addEventListener('pointerdown', function (e) {
+      if (e.target === thumbEl) return;
+      const rect = barEl.getBoundingClientRect();
+      const overflow = c.scrollWidth - c.clientWidth;
+      if (overflow <= 0) return;
+      const ratio = (e.clientX - rect.left - 3 - thumbEl.offsetWidth / 2) / (rect.width - 6 - thumbEl.offsetWidth);
+      c.scrollLeft = Math.max(0, Math.min(overflow, ratio * overflow));
+      updateHScroll();
+    });
   }
-  if (window.MutationObserver) {
-    new MutationObserver(updateHScroll).observe(document.getElementById('tbody'), { childList: true, subtree: true });
-  }
-  let dragging = false, startX = 0, startLeft = 0;
-  thumb.addEventListener('pointerdown', function (e) {
-    e.preventDefault();
-    dragging = true;
-    startX = e.clientX;
-    startLeft = parseFloat(thumb.style.left || '3') || 3;
-    thumb.setPointerCapture && thumb.setPointerCapture(e.pointerId);
-  });
-  document.addEventListener('pointermove', function (e) {
-    if (!dragging) return;
-    const maxLeft = bar.clientWidth - 6 - thumb.offsetWidth;
-    let left = startLeft + (e.clientX - startX);
-    left = Math.max(3, Math.min(maxLeft, left));
-    thumb.style.left = left + 'px';
-    const overflow = c.scrollWidth - c.clientWidth;
-    if (overflow > 0) c.scrollLeft = ((left - 3) / maxLeft) * overflow;
-  });
-  document.addEventListener('pointerup', function () { dragging = false; });
-  bar.addEventListener('pointerdown', function (e) {
-    if (e.target === thumb) return;
-    const rect = bar.getBoundingClientRect();
-    const overflow = c.scrollWidth - c.clientWidth;
-    if (overflow <= 0) return;
-    const ratio = (e.clientX - rect.left - 3 - thumb.offsetWidth / 2) / (rect.width - 6 - thumb.offsetWidth);
-    c.scrollLeft = Math.max(0, Math.min(overflow, ratio * overflow));
-    updateHScroll();
-  });
+  bindDrag(topThumb, top);
+  bindDrag(thumb, bar);
 }
 function renderColToggles() {
   const cont = document.getElementById('col-toggles');
@@ -2317,6 +2333,8 @@ function calcStats() {
   const cena = f.filter(d=>fmtBool(d.cenaSabado)).length;
   const adultos = f.filter(d=>d.tipo==='Adulto').length;
   const ninos = f.filter(d=>d.tipo==='Niño').length;
+  const pagMant = f.filter(isPagadoMant).length;
+  const pagCuota = f.filter(isPagadoCuota).length;
   document.getElementById('stats').innerHTML = `
     <span class="stat-badge">Sábado: <strong>${sab}</strong></span>
     <span class="stat-badge">Domingo: <strong>${dom}</strong></span>
@@ -2324,7 +2342,13 @@ function calcStats() {
     <span class="stat-badge">Cena: <strong>${cena}</strong></span>
     <span class="stat-badge">Adultos: <strong>${adultos}</strong></span>
     <span class="stat-badge">Niños: <strong>${ninos}</strong></span>
+    <button type="button" class="stat-badge" id="stat-pagado-mant" title="Ver quiénes han pagado mantenimiento">Pagado mant.: <strong>${pagMant}</strong></button>
+    <button type="button" class="stat-badge" id="stat-pagado-cuota" title="Ver quiénes han pagado cuota">Cuota pagada: <strong>${pagCuota}</strong></button>
     <span class="stat-badge">Total: <strong>${f.length}</strong></span>`;
+  const bm = document.getElementById('stat-pagado-mant');
+  const bc = document.getElementById('stat-pagado-cuota');
+  if (bm) bm.onclick = () => openSheet('Han pagado mantenimiento (' + pagMant + ')', f.filter(isPagadoMant));
+  if (bc) bc.onclick = () => openSheet('Han pagado cuota (' + pagCuota + ')', f.filter(isPagadoCuota));
 
   // money
   let tMant=0, tCuota=0, tCena=0, pMant=0, pCuota=0, pCena=0;
@@ -2441,7 +2465,8 @@ function onCellClick(e) {
             saveData();
             render();
           },
-          () => render()
+          () => render(),
+          td
         );
         return;
       }
@@ -2457,14 +2482,43 @@ function onCellClick(e) {
   });
 }
 
-function showConfirm(msg, onOk, onCancel, title='Confirmar') {
+function showConfirm(msg, onOk, onCancel, title='Confirmar', anchorEl=null) {
   const dlg = document.getElementById('confirm-dialog');
   document.getElementById('dlg-title').textContent = title;
   document.getElementById('confirm-msg').innerHTML = msg;
   dlg.classList.remove('hidden');
+  const box = dlg.querySelector('.dialog-box');
+  if (box && anchorEl && anchorEl.getBoundingClientRect) {
+    const r = anchorEl.getBoundingClientRect();
+    const bw = Math.min(420, window.innerWidth - 24);
+    const bh = box.offsetHeight || 140;
+    let left = r.right + 10;
+    if (left + bw > window.innerWidth - 12) left = r.left - bw - 10;
+    left = Math.max(12, Math.min(window.innerWidth - bw - 12, left));
+    let top = r.top + r.height / 2 - bh / 2;
+    top = Math.max(12, Math.min(window.innerHeight - bh - 12, top));
+    box.style.position = 'fixed';
+    box.style.left = left + 'px';
+    box.style.top = top + 'px';
+    box.style.margin = '0';
+    box.style.maxWidth = bw + 'px';
+    dlg.style.alignItems = 'flex-start';
+  } else if (box) {
+    box.style.position = '';
+    box.style.left = '';
+    box.style.top = '';
+    box.style.margin = '';
+    box.style.maxWidth = '';
+    dlg.style.alignItems = 'center';
+  }
   const ok = document.getElementById('confirm-ok');
   const cancel = document.getElementById('confirm-cancel');
-  const cleanup = () => { dlg.classList.add('hidden'); ok.onclick=null; cancel.onclick=null; };
+  const cleanup = () => {
+    dlg.classList.add('hidden');
+    if (box) { box.style.position=''; box.style.left=''; box.style.top=''; box.style.margin=''; box.style.maxWidth=''; }
+    dlg.style.alignItems='center';
+    ok.onclick=null; cancel.onclick=null;
+  };
   ok.onclick = () => { cleanup(); onOk(); };
   cancel.onclick = () => { cleanup(); onCancel && onCancel(); };
 }
@@ -3842,6 +3896,8 @@ if (localStorage.getItem('lt27_dark_v3')==='1') document.documentElement.classLi
 initLockUI();;
   initHScroll();
   updateHScroll();
+  setTimeout(updateHScroll, 300);
+  setTimeout(updateHScroll, 1000);
 (async function bootstrap() {
   setCloudStatus('pending', '☁ Conectando…');
   // Base: datos embebidos en el HTML (siempre completos en una copia descargada)
