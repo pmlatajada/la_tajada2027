@@ -287,7 +287,7 @@ html.dark .bulk-bar{background:#1e1b4b;border-color:#5b21b6}
   height:100vh !important;
   height:100dvh !important;
   max-height:100vh;
-  z-index:9999;
+  z-index:30000;
   background:rgba(15,23,42,.6);
   backdrop-filter:blur(6px);
   display:flex;align-items:center;justify-content:center;
@@ -307,7 +307,7 @@ html.dark .bulk-bar{background:#1e1b4b;border-color:#5b21b6}
   border:1px solid #e2e8f0;
   animation:popIn 0.3s var(--ease) both;
   pointer-events:auto !important;
-  position:relative;z-index:10000;
+  position:relative;z-index:30001;
   margin:auto;
   flex-shrink:0;
 }
@@ -410,7 +410,7 @@ body.lock-open #lock-overlay *{pointer-events:auto !important}
 
 /* Ficha */
 .ficha-overlay{
-  position:fixed;inset:0;z-index:95;
+  position:fixed;inset:0;z-index:20000;
   background:rgba(15,23,42,.5);
   backdrop-filter:blur(5px);
   display:none;align-items:flex-start;justify-content:center;
@@ -563,7 +563,7 @@ html.dark .btn-lock.unlocked{background:#14532d;color:#bbf7d0;border-color:#1665
 .dialog{
   position:fixed;inset:0;background:rgba(15,23,42,.45);
   backdrop-filter:blur(4px);
-  display:flex;align-items:center;justify-content:center;z-index:10000;padding:1rem;
+  display:flex;align-items:center;justify-content:center;z-index:20000;padding:1rem;
   animation:fadeIn 0.2s ease both;
 }
 .dialog.hidden{display:none}
@@ -671,6 +671,7 @@ html.dark .btn-lock.unlocked{background:#14532d;color:#bbf7d0;border-color:#1665
       <button id="btn-download-page" type="button" class="btn btn-outline" title="Descargar copia idéntica de esta página">Descargar página</button>
       <button id="btn-save-now" type="button" class="btn btn-outline" title="Guardar ahora en este navegador y en la nube">💾 Guardar ahora</button>
       <button id="btn-email-all" type="button" class="btn btn-outline" title="Abrir Outlook web (latajada1993@hotmail.com) para escribir a todos">✉ Correo a todos</button>
+      <button id="btn-changes" type="button" class="btn btn-outline" title="Ver y deshacer últimos cambios">🕘 Últimos cambios</button>
       <div class="export-wrap">
         <button id="btn-export" type="button" class="btn btn-yellow">Exportar ▾</button>
         <div id="export-menu" class="export-menu" role="menu">
@@ -2453,6 +2454,7 @@ function openFicha(id, isNew) {
   const ov = document.getElementById('ficha-overlay');
   ov.classList.add('open');
   ov.setAttribute('aria-hidden', 'false');
+  placeDialogNear(ov);
   document.body.style.overflow = 'hidden';
   // foco en nombre
   setTimeout(() => form.querySelector('[name="nombre"]')?.focus(), 50);
@@ -2562,6 +2564,60 @@ document.getElementById('ficha-overlay')?.addEventListener('click', e => {
 });
 
 // ===== AUTENTICACIÓN (sin registro; contraseña solo para modificar) =====
+let lastActionEl = null;
+document.addEventListener('pointerdown', function (e) {
+  lastActionEl = e.target;
+}, true);
+
+function placeNear(box, anchor) {
+  if (!box) return;
+  if (!anchor || !anchor.getBoundingClientRect) {
+    box.style.position = '';
+    box.style.left = '';
+    box.style.top = '';
+    box.style.margin = '';
+    box.style.maxWidth = '';
+    return;
+  }
+  const r = anchor.getBoundingClientRect();
+  const bw = Math.min(520, window.innerWidth - 24);
+  const bh = box.offsetHeight || 200;
+  let left = null, top = null;
+  if (r.right + 10 + bw <= window.innerWidth - 12) {
+    left = r.right + 10;
+    top = r.top + r.height / 2 - bh / 2;
+  }
+  if (left === null && r.left - 10 - bw >= 12) {
+    left = r.left - bw - 10;
+    top = r.top + r.height / 2 - bh / 2;
+  }
+  if (left === null && r.bottom + 10 + bh <= window.innerHeight - 12) {
+    top = r.bottom + 10;
+    left = r.left + r.width / 2 - bw / 2;
+  }
+  if (left === null && r.top - 10 - bh >= 12) {
+    top = r.top - bh - 10;
+    left = r.left + r.width / 2 - bw / 2;
+  }
+  if (left === null) {
+    left = (window.innerWidth - bw) / 2;
+    top = (window.innerHeight - bh) / 2;
+  }
+  left = Math.max(12, Math.min(window.innerWidth - bw - 12, left));
+  top = Math.max(12, Math.min(window.innerHeight - bh - 12, top));
+  box.style.position = 'fixed';
+  box.style.left = left + 'px';
+  box.style.top = top + 'px';
+  box.style.margin = '0';
+  box.style.maxWidth = bw + 'px';
+}
+
+function placeDialogNear(dlg) {
+  if (!dlg) return;
+  const box = dlg.querySelector('.dialog-box, .dialog-card, .ficha-card');
+  if (box) placeNear(box, lastActionEl);
+}
+
 const ENTRY_PASSWORD = 'ltjd';
 const EDIT_PASSWORD = 'ltjd27';
 let entryVerified = false;
@@ -3234,7 +3290,67 @@ function validateFieldValue(key, value, excludeId) {
 function pushHistory() {
   history.push(JSON.stringify(data));
   if (history.length > MAX_HISTORY) history.shift();
+  pushChangeLog();
 }
+let changeLog = [];
+try { changeLog = JSON.parse(localStorage.getItem('lt27_change_log_v1') || '[]') || []; } catch (e) { changeLog = []; }
+function saveChangeLog() {
+  try { localStorage.setItem('lt27_change_log_v1', JSON.stringify(changeLog)); } catch (e) {}
+}
+function pushChangeLog() {
+  changeLog.unshift({ time: new Date().toLocaleTimeString(), snapshot: JSON.stringify(data) });
+  if (changeLog.length > 30) changeLog.pop();
+  saveChangeLog();
+}
+function renderChanges() {
+  const list = document.getElementById('changes-list');
+  if (!list) return;
+  if (!changeLog.length) {
+    list.innerHTML = '<div style="color:var(--muted)">No hay cambios registrados todavía.</div>';
+    return;
+  }
+  list.innerHTML = changeLog.map(function (e, i) {
+    return '<div style="display:flex;justify-content:space-between;align-items:center;gap:.5rem;border:1px solid var(--border);border-radius:10px;padding:.5rem .65rem;background:var(--bg)">' +
+      '<span style="font-size:.85rem">Estado previo a las <strong>' + e.time + '</strong></span>' +
+      '<button type="button" class="btn btn-sm btn-outline" data-undo="' + i + '">Deshacer</button>' +
+      '</div>';
+  }).join('');
+  list.querySelectorAll('[data-undo]').forEach(function (btn) {
+    btn.onclick = function () { undoChange(Number(btn.dataset.undo)); };
+  });
+}
+function undoChange(i) {
+  const entry = changeLog[i];
+  if (!entry) return;
+  try { data = JSON.parse(entry.snapshot); } catch (e) { return; }
+  changeLog = changeLog.slice(i + 1);
+  saveChangeLog();
+  saveData();
+  render();
+  closeChanges();
+}
+function undoAllChanges() {
+  if (!changeLog.length) return;
+  const last = changeLog[changeLog.length - 1];
+  try { data = JSON.parse(last.snapshot); } catch (e) { return; }
+  changeLog = [];
+  saveChangeLog();
+  saveData();
+  render();
+  closeChanges();
+}
+function openChanges() {
+  renderChanges();
+  const dlg = document.getElementById('changes-dialog');
+  if (dlg) { dlg.classList.remove('hidden'); placeDialogNear(dlg); }
+}
+function closeChanges() {
+  const dlg = document.getElementById('changes-dialog');
+  if (dlg) dlg.classList.add('hidden');
+}
+document.getElementById('btn-changes')?.addEventListener('click', openChanges);
+document.getElementById('changes-close')?.addEventListener('click', closeChanges);
+document.getElementById('changes-clear')?.addEventListener('click', undoAllChanges);
 function saveData() {
   localStorage.setItem('lt27_data_v7', JSON.stringify(data));
   localStorage.setItem('lt27_cols_v3', JSON.stringify(visibleCols));
@@ -3244,6 +3360,7 @@ function saveData() {
   localStorage.setItem('lt27_group_v3', groupByFamily ? '1' : '0');
   updateStatus();
   scheduleCloudSave();
+  scheduleGithubSave();
 }
 function updateStatus() {
   const f = getFiltered().filter(d => !isMusico(d));
@@ -3369,6 +3486,10 @@ function openPayAlertConfig() {
   if (dlg.parentElement !== document.body) {
     document.body.appendChild(dlg);
   }
+  dlg.classList.remove('hidden');
+  dlg.style.display = 'flex';
+  dlg.setAttribute('aria-hidden', 'false');
+  placeDialogNear(dlg);
   dlg.classList.remove('hidden');
   dlg.style.cssText = 'display:flex !important;position:fixed !important;inset:0 !important;z-index:10000 !important;align-items:center;justify-content:center;background:rgba(15,23,42,.55);padding:1rem;margin:0;width:100vw;height:100dvh;';
   dlg.setAttribute('aria-hidden', 'false');
@@ -3768,6 +3889,8 @@ function renderRow(row, cols, q) {
       display = fmtBool(val) ? '<span class="check-yes">✓</span>' : '<span class="check-no">□</span>';
     } else if (c.type==='date') {
       display = fmtDate(val) || '<span class="empty">—</span>';
+    } else if (c.key==='edad') {
+      display = row.nacimiento ? highlight(row.edad ?? '', q) : '<span class="empty">—</span>';
     } else if (c.key==='dni') {
       const raw = val ?? '';
       const ok = isValidDNI(raw);
@@ -3922,6 +4045,7 @@ function onCellClick(e) {
             render();
           },
           () => render(),
+          'Confirmar',
           td
         );
         return;
@@ -3939,6 +4063,7 @@ function onCellClick(e) {
 }
 
 function showConfirm(msg, onOk, onCancel, title='Confirmar', anchorEl=null) {
+  anchorEl = anchorEl || lastActionEl;
   const dlg = document.getElementById('confirm-dialog');
   document.getElementById('dlg-title').textContent = title;
   document.getElementById('confirm-msg').innerHTML = msg;
@@ -4895,6 +5020,7 @@ function openDriveConfig() {
   const lab = document.getElementById('drive-filename-label');
   if (lab) lab.textContent = GDRIVE.fileName;
   dlg.classList.remove('hidden');
+  placeDialogNear(dlg);
 }
 
 function closeDriveConfig() {
@@ -5150,11 +5276,28 @@ const GH_REPO = 'la_tajada2027';
 const GH_PATH = 'index.html';
 const GH_BRANCH = 'main';
 
-async function githubSavePage() {
+function buildPageHtml() {
+  let html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+  try {
+    const json = JSON.stringify(data);
+    html = html.replace(/const ORIGINAL_DATA = \[[\s\S]*?\}\];/, 'const ORIGINAL_DATA = ' + json + ';');
+  } catch (e) {}
+  return html;
+}
+
+let ghSaveTimer = null;
+function scheduleGithubSave() {
+  if (!canEdit) return;
+  clearTimeout(ghSaveTimer);
+  ghSaveTimer = setTimeout(function () { githubSavePage(true); }, 8000);
+}
+
+async function githubSavePage(silent) {
   try {
     let token = '';
     try { token = localStorage.getItem('lt27_gh_token') || ''; } catch (e) {}
     if (!token) {
+      if (silent) return;
       token = prompt('Para actualizar la web en GitHub, pega tu token de GitHub (permiso "Contents: Read and write"). Se guardará solo en este navegador.');
       if (!token) return;
       try { localStorage.setItem('lt27_gh_token', token); } catch (e) {}
@@ -5165,7 +5308,7 @@ async function githubSavePage() {
     const res = await fetch(url, { headers: headers });
     if (!res.ok) throw new Error('No se pudo leer index.html en GitHub (' + res.status + '). Revisa el token.');
     const meta = await res.json();
-    const html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+    const html = buildPageHtml();
     const content = btoa(unescape(encodeURIComponent(html)));
     const put = await fetch(url, {
       method: 'PUT',
@@ -5176,9 +5319,18 @@ async function githubSavePage() {
       const t = await put.text();
       throw new Error('GitHub respondió ' + put.status + ': ' + t);
     }
-    alert('Web actualizada en GitHub.\n\nGitHub Pages la publicará en unos segundos o minutos.');
+    if (silent) {
+      showToast({ kind: 'ok', title: 'GitHub', msg: 'Cambios guardados en GitHub. Se publicarán en unos segundos.', ttl: 4000 });
+    } else {
+      alert('Web actualizada en GitHub.\n\nGitHub Pages la publicará en unos segundos o minutos.');
+    }
   } catch (err) {
-    alert('No se pudo actualizar GitHub: ' + (err && err.message ? err.message : err));
+    const msg = 'No se pudo actualizar GitHub: ' + (err && err.message ? err.message : err);
+    if (silent) {
+      showToast({ kind: 'err', title: 'GitHub', msg: msg, ttl: 6000 });
+    } else {
+      alert(msg);
+    }
   }
 }
 
@@ -5449,5 +5601,17 @@ initLockUI();;
     </div>
   </div>
 
+<!-- Últimos cambios -->
+<div id="changes-dialog" class="dialog hidden">
+  <div class="dialog-box" style="max-width:560px">
+    <h3>Últimos cambios</h3>
+    <p style="font-size:.85rem;color:var(--muted);margin-bottom:.75rem">Cada cambio guarda el estado anterior. “Deshacer” vuelve a ese punto; “Deshacer todos” vuelve al cambio más antiguo guardado.</p>
+    <div id="changes-list" style="max-height:50vh;overflow:auto;display:flex;flex-direction:column;gap:.5rem;margin-bottom:.75rem"></div>
+    <div class="dialog-actions">
+      <button type="button" class="btn btn-danger" id="changes-clear">Deshacer todos</button>
+      <button type="button" class="btn btn-outline" id="changes-close">Cerrar</button>
+    </div>
+  </div>
+</div>
 
 </body></html>
