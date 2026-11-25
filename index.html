@@ -751,7 +751,7 @@ html.dark .btn-lock.unlocked{background:#14532d;color:#bbf7d0;border-color:#1665
     <button class="btn btn-sm btn-outline" data-bulk="deselect">Deseleccionar</button>
   </div>
 
-  <div class="status-bar no-print" id="status">Mostrando <strong>197</strong> de <strong>197</strong> socios · Guardado local 22:57:37</div>
+  <div class="status-bar no-print" id="status">Mostrando <strong>197</strong> de <strong>197</strong> socios · Guardado local 23:09:01</div>
 
   <div id="hscroll-top" aria-hidden="true"><div id="hscroll-thumb-top" style="width: 1756px; left: 3px;"></div></div>
   <div id="table-container">
@@ -2273,7 +2273,7 @@ html.dark .btn-lock.unlocked{background:#14532d;color:#bbf7d0;border-color:#1665
   <div class="lock-box" role="dialog" aria-modal="true" aria-labelledby="lock-title">
     <h3 id="lock-title">Peña Mixta La Tajada 2027</h3>
     <p id="lock-desc">Introduce la contraseña para entrar.</p>
-    <div class="lock-hint" id="lock-hint"></div>
+    <div class="lock-hint" id="lock-hint">Para añadir introduce la contraseña y pulsa Desbloquear.</div>
     <form id="lock-form" autocomplete="on" onsubmit="return tryUnlock(event)">
       <input type="password" id="lock-pass" name="password" placeholder="Contraseña" autocomplete="current-password">
       <div class="lock-error" id="lock-error"></div>
@@ -2287,10 +2287,10 @@ html.dark .btn-lock.unlocked{background:#14532d;color:#bbf7d0;border-color:#1665
 
 <!-- Últimos cambios -->
 <div id="changes-dialog" class="dialog hidden">
-  <div class="dialog-box" style="max-width:560px">
+  <div class="dialog-box" style="max-width: 520px; position: fixed; left: 1085.61px; top: 12px; margin: 0px;">
     <h3>Últimos cambios</h3>
     <p style="font-size:.85rem;color:var(--muted);margin-bottom:.75rem">Cada cambio guarda el estado anterior. “Deshacer” vuelve a ese punto; “Deshacer todos” vuelve al cambio más antiguo guardado.</p>
-    <div id="changes-list" style="max-height:50vh;overflow:auto;display:flex;flex-direction:column;gap:.5rem;margin-bottom:.75rem"></div>
+    <div id="changes-list" style="max-height:50vh;overflow:auto;display:flex;flex-direction:column;gap:.5rem;margin-bottom:.75rem"><div style="color:var(--muted)">No hay cambios registrados todavía.</div></div>
     <div class="dialog-actions">
       <button type="button" class="btn btn-danger" id="changes-clear">Deshacer todos</button>
       <button type="button" class="btn btn-outline" id="changes-close">Cerrar</button>
